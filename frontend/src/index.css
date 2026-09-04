@@ -1,0 +1,1237 @@
+/* ==========================================================================
+   Дизайн-система сайта преподавателя физики и математики
+
+   Палитра по ТЗ, раздел 4: минимализм, светлые тона — голубой, белый,
+   бежевый/песочный. Характер задаётся не цветом, а материалом предмета:
+   тетрадная клетка как шкала отступов и плотность голубого как шкала сложности.
+   ========================================================================== */
+
+:root {
+  /* --- Цвет: голубой, белый, песочный --------------------------------- */
+  --white: #ffffff;
+  --sand: #f3f0e8;
+  --sand-line: #dfe3df;
+  --sky: #76b8d4;
+  --sky-deep: #115d78;
+  --sky-wash: #e7f3f7;
+  --ink: #102e3a;
+  --graphite: #61727a;
+
+  /* Семантика статусов: приглушены, чтобы не выпадать из светлой гаммы */
+  --ok: #3e8a6b;
+  --warn: #a8792c;
+  --alarm: #b4544a;
+  --ok-wash: #eaf3ef;
+  --warn-wash: #faf3e6;
+  --alarm-wash: #fbeeed;
+
+  --grid-line: rgba(17, 93, 120, 0.055);
+
+  /* Сложность — не радуга, а плотность одного голубого.
+     Шкала порядковая, поэтому и цвет должен читаться как порядок. */
+  --level-easy: #d8cdb4;
+  --level-medium: #57a5d8;
+  --level-hard: #1d6a99;
+  --level-olympiad: #0e3f5e;
+
+  /* --- Ритм ------------------------------------------------------------ */
+  --u: 8px;              /* базовая единица                    */
+  --cell: 24px;          /* клетка = 3u, шаг видимой сетки     */
+  --s-1: 8px;
+  --s-2: 16px;
+  --s-3: 24px;
+  --s-4: 32px;
+  --s-6: 48px;
+  --s-8: 64px;
+  --s-12: 96px;
+
+  --measure: 68ch;
+  --shell: 1200px;
+  --gutter: var(--s-3);
+
+  /* --- Форма ----------------------------------------------------------- */
+  --r: 12px;
+  --line: 1px solid var(--sand-line);
+  --line-sky: 1px solid #cfe2f1;
+
+  /* --- Шрифт ----------------------------------------------------------- */
+  --font-display: 'Manrope', 'Golos Text', system-ui, sans-serif;
+  --font-body: 'Golos Text', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'PT Mono', ui-monospace, monospace;
+
+  --t-xs: 0.75rem;
+  --t-sm: 0.8125rem;
+  --t-base: 1rem;
+  --t-md: 1.125rem;
+  --t-lg: 1.375rem;
+  --t-xl: 1.625rem;
+  --t-2xl: clamp(2.7rem, 1.2rem + 5.8vw, 6.6rem);
+
+  --track-tight: -0.02em;
+  --track-label: 0.08em;
+}
+
+/* ==========================================================================
+   Сброс и основа
+   ========================================================================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Подвал прижат к низу окна, пока содержимого не хватает на весь экран */
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh; /* на мобильных не считаем высоту адресной строки */
+}
+
+main {
+  flex: 1 0 auto;
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: var(--t-base);
+  line-height: 1.6;
+  color: var(--ink);
+  background-color: #f7f8f5;
+  /* Видимая клетка и есть шкала отступов: вёрстка садится на её линии */
+  background-image: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: var(--track-tight);
+  text-wrap: balance;
+}
+
+/* Unbounded звучит только на первом экране — этого требует минимализм ТЗ */
+h1 {
+  font-family: var(--font-display);
+  font-size: var(--t-2xl);
+  font-weight: 700;
+  line-height: 0.96;
+  letter-spacing: -0.065em;
+}
+
+h2 {
+  font-size: var(--t-xl);
+}
+
+h3 {
+  font-size: var(--t-md);
+}
+
+p {
+  max-width: var(--measure);
+}
+
+a {
+  color: var(--sky-deep);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+}
+
+a:hover {
+  color: var(--ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--sky-deep);
+  outline-offset: 2px;
+  border-radius: var(--r);
+}
+
+::selection {
+  background: var(--sky-wash);
+  color: var(--ink);
+}
+
+/* ==========================================================================
+   Раскладка
+   ========================================================================== */
+
+.container {
+  max-width: var(--shell);
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+}
+
+section {
+  padding: clamp(56px, 8vw, 112px) 0;
+}
+
+.section-title {
+  font-size: clamp(1.8rem, 3vw, 2.7rem);
+  color: var(--ink);
+  margin-bottom: var(--s-3);
+  padding-bottom: var(--s-2);
+  border-bottom: 1px solid var(--sand-line);
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--s-4);
+}
+
+/* ==========================================================================
+   Шапка и навигация
+   ========================================================================== */
+
+.site-header {
+  background: rgba(247, 248, 245, 0.9);
+  border-bottom: 1px solid rgba(16, 46, 58, 0.1);
+  backdrop-filter: blur(16px);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: 76px;
+  padding: 12px var(--gutter);
+}
+
+.nav .logo {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.88rem;
+  letter-spacing: var(--track-tight);
+  color: var(--ink);
+  text-decoration: none;
+  margin-right: clamp(16px, 3vw, 52px);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo i { color: var(--sky); font-style: normal; }
+
+.logo-mark {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--white);
+  font-family: Georgia, serif;
+  font-size: 1.2rem;
+}
+
+.nav-menu { display: flex; align-items: center; flex: 1; gap: var(--s-3); }
+.nav-links { display: flex; align-items: center; gap: clamp(12px, 1.7vw, 26px); }
+.nav-actions { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.nav-toggle { display: none; }
+
+.nav .logo:hover {
+  color: var(--sky-deep);
+}
+
+/* Только пункты меню: логотип и кнопки живут по своим правилам.
+   Через :not() - иначе .nav a.active (0,2,1) перебивает цвет .btn (0,1,0)
+   и активная кнопка получает тёмный текст вместо белого. */
+.nav-links a {
+  color: var(--graphite);
+  text-decoration: none;
+  font-size: var(--t-sm);
+  font-weight: 500;
+  padding: 8px 0;
+  border-bottom: 1px solid transparent;
+}
+
+.nav-links a:hover {
+  color: var(--ink);
+}
+
+.nav-links a.active {
+  color: var(--ink);
+  border-bottom-color: var(--sky-deep);
+}
+
+/* ==========================================================================
+   Кнопки
+   ========================================================================== */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-1);
+  border: 1px solid var(--sky-deep);
+  cursor: pointer;
+  background: var(--sky-deep);
+  color: var(--white);
+  padding: 12px 20px;
+  border-radius: 999px;
+  font-family: var(--font-body);
+  font-size: var(--t-sm);
+  font-weight: 500;
+  line-height: 1.2;
+  text-decoration: none;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.btn::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  top: -80%;
+  bottom: -80%;
+  width: 38px;
+  left: -70px;
+  transform: rotate(18deg);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.36), transparent);
+  animation: shimmer-button 4.2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.btn-outline::after,
+.btn-ghost::after { background: linear-gradient(90deg, transparent, rgba(118,184,212,.28), transparent); }
+
+@keyframes shimmer-button {
+  0%, 58% { left: -70px; }
+  78%, 100% { left: calc(100% + 70px); }
+}
+
+.btn:hover {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--white);
+  transform: translateY(-2px);
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-outline {
+  background: var(--white);
+  color: var(--sky-deep);
+  border-color: #b9d5e8;
+}
+
+.btn-ghost { background: transparent; color: var(--ink); border-color: rgba(16, 46, 58, 0.18); }
+.btn-ghost:hover { background: var(--white); color: var(--sky-deep); border-color: var(--sky-deep); }
+
+.btn-outline:hover {
+  background: var(--sky-wash);
+  border-color: var(--sky-deep);
+  color: var(--sky-deep);
+}
+
+.btn-danger {
+  background: var(--alarm);
+  border-color: var(--alarm);
+}
+
+.btn-ok {
+  background: var(--ok);
+  border-color: var(--ok);
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: var(--t-xs);
+}
+
+/* ==========================================================================
+   Герой
+   ========================================================================== */
+
+.hero {
+  background: #f3f7f8;
+  border-bottom: var(--line);
+  padding: clamp(64px, 8vw, 116px) 0 0;
+  background-image:
+    linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+  background-size: 32px 32px;
+  overflow: hidden;
+}
+
+.hero-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(330px, .8fr); align-items: center; gap: clamp(40px, 8vw, 110px); }
+.hero-copy { position: relative; z-index: 2; }
+.eyebrow { display: flex; flex-wrap: wrap; gap: 10px 24px; max-width: none; font-family: var(--font-mono); font-size: .69rem; letter-spacing: .09em; text-transform: uppercase; color: var(--sky-deep); }
+.hero .eyebrow { justify-content: space-between; max-width: 670px; margin-bottom: clamp(30px, 5vw, 62px); padding-bottom: 12px; border-bottom: 1px solid rgba(17, 93, 120, .22); }
+
+.hero h1 {
+  color: var(--ink);
+  max-width: 10ch;
+  margin-bottom: var(--s-4);
+}
+
+.hero h1 em { color: var(--sky-deep); font-style: normal; }
+
+.hero-lead {
+  font-size: var(--t-md);
+  color: var(--graphite);
+  max-width: 53ch;
+  margin-bottom: var(--s-4);
+}
+
+.hero-actions { display: flex; align-items: center; gap: 26px; flex-wrap: wrap; }
+.text-link { display: inline-flex; align-items: center; gap: 10px; color: var(--ink); font-size: .9rem; font-weight: 600; text-decoration: none; }
+.text-link span { color: var(--sky-deep); transition: transform .2s ease; }
+.text-link:hover span { transform: translateX(4px); }
+
+.orbit-visual { position: relative; aspect-ratio: 1; min-height: 420px; }
+.orbit-visual::before, .orbit-visual::after { content: ''; position: absolute; background: rgba(17, 93, 120, .18); }
+.orbit-visual::before { left: 50%; top: 3%; bottom: 3%; width: 1px; }
+.orbit-visual::after { top: 50%; left: 3%; right: 3%; height: 1px; }
+.orbit-layer { position: absolute; top: 50%; left: 50%; width: 500px; height: 500px; pointer-events: none; }
+.orbit-layer-outer { transform: translate(-50%, -50%) rotate(-28deg) scaleY(.72); }
+.orbit-layer-inner { transform: translate(-50%, -50%) rotate(38deg) scaleY(.58); }
+.orbiting-path { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.orbiting-path circle { stroke: rgba(17, 93, 120, .34); stroke-width: 1; }
+.orbiting-item { position: absolute; top: 50%; left: 50%; display: grid; place-items: center; width: var(--orbit-size); height: var(--orbit-size); margin: calc(var(--orbit-size) / -2); border-radius: 50%; animation: orbiting-circles var(--orbit-duration) linear infinite; animation-delay: var(--orbit-delay); will-change: transform; }
+.orbiting-item.is-reverse { animation-direction: reverse; }
+.electron { display: block; width: 100%; height: 100%; border: 4px solid #f3f7f8; border-radius: 50%; background: var(--sky-deep); box-shadow: 0 3px 12px rgba(16,46,58,.2); }
+.electron-secondary { background: var(--sky); border-width: 3px; }
+.orbit-core { position: absolute; inset: 50% auto auto 50%; transform: translate(-50%, -50%); display: grid; place-items: center; width: 126px; height: 126px; border-radius: 50%; background: var(--ink); color: var(--white); font: 700 3rem/1 var(--font-display); box-shadow: 0 20px 60px rgba(16,46,58,.18); }
+.orbit-core span { display: block; font: 400 .7rem/1 var(--font-mono); letter-spacing: .08em; }
+.axis, .formula { position: absolute; font: .72rem/1 var(--font-mono); color: var(--graphite); }
+.axis-x { right: 1%; top: calc(50% - 18px); }
+.axis-y { left: calc(50% + 10px); top: 0; }
+.formula-one { left: 4%; top: 19%; }
+.formula-two { right: 2%; bottom: 14%; }
+
+@keyframes orbiting-circles {
+  from { transform: rotate(calc(var(--orbit-angle) * 1deg)) translateY(var(--orbit-radius)) rotate(calc(var(--orbit-angle) * -1deg)); }
+  to { transform: rotate(calc(var(--orbit-angle) * 1deg + 360deg)) translateY(var(--orbit-radius)) rotate(calc(var(--orbit-angle) * -1deg - 360deg)); }
+}
+
+.proof-strip { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: clamp(48px, 8vw, 96px); border-top: 1px solid rgba(17,93,120,.16); }
+.proof-strip > div { display: flex; align-items: center; gap: 16px; padding: 24px 28px; border-right: 1px solid rgba(17,93,120,.16); }
+.proof-strip > div:first-child { padding-left: 0; }
+.proof-strip > div:last-child { border-right: 0; }
+.proof-strip strong { color: var(--sky-deep); font: 700 1.5rem/1 var(--font-display); }
+.proof-strip span { color: var(--graphite); font-size: .78rem; line-height: 1.35; }
+
+.reviews-section { background: #f7f8f5; }
+.section-heading { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 16px; margin-bottom: 42px; }
+.section-heading .eyebrow { grid-column: 1 / -1; }
+.section-heading h2 { font: 700 clamp(2rem, 4vw, 3.6rem)/1.05 var(--font-display); letter-spacing: -.045em; }
+.review-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+
+.hero .btn + .btn {
+  margin-left: var(--s-1);
+}
+
+.achievements {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  margin: var(--s-4) 0;
+  border-top: var(--line);
+  border-bottom: var(--line);
+}
+
+/* Достижения — не карточки с тенью, а строки приборной панели */
+.achievement {
+  flex: 1 1 220px;
+  padding: var(--s-2) var(--s-3);
+  font-size: var(--t-sm);
+  color: var(--graphite);
+  border-right: var(--line);
+}
+
+.achievement:first-child {
+  padding-left: 0;
+}
+
+.achievement:last-child {
+  border-right: none;
+}
+
+/* ==========================================================================
+   Фильтры и панели инструментов
+   ========================================================================== */
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  background: var(--white);
+  border: var(--line);
+  padding: var(--s-2);
+  border-radius: 18px;
+  box-shadow: 0 12px 36px rgba(16,46,58,.06);
+  margin-bottom: var(--s-4);
+}
+
+.filters select {
+  /* Справа место под свою стрелку, её рисует правило select ниже */
+  padding: 8px 36px 8px 12px;
+  border: var(--line);
+  border-radius: var(--r);
+  background-color: var(--white);
+  color: var(--ink);
+  min-width: 150px;
+  flex: 1;
+  font-family: var(--font-body);
+  font-size: var(--t-sm);
+}
+
+.filters select:hover {
+  border-color: var(--sky);
+}
+
+.filters select:focus {
+  outline: none;
+  border-color: var(--sky-deep);
+  box-shadow: 0 0 0 3px var(--sky-wash);
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1);
+  margin-bottom: var(--s-3);
+}
+
+/* ==========================================================================
+   Задачи
+   ========================================================================== */
+
+.task-feed {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.task-card {
+  background: var(--white);
+  border: var(--line);
+  border-radius: 18px;
+  padding: clamp(20px, 4vw, 36px);
+  box-shadow: 0 8px 30px rgba(16,46,58,.04);
+  transition: border-color .2s ease, transform .2s ease;
+}
+.task-card:hover { border-color: rgba(17,93,120,.35); transform: translateY(-2px); }
+
+/* 21st.dev / Magic UI: pointer-following spotlight card */
+.magic-card { --magic-x: 50%; --magic-y: 50%; --magic-size: 160px; position: relative; isolation: isolate; overflow: hidden; }
+.magic-card::before {
+  content: '';
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  background: radial-gradient(var(--magic-size) circle at var(--magic-x) var(--magic-y), rgba(118,184,212,.1), transparent 58%);
+  opacity: 0;
+  transition: opacity .25s ease;
+  pointer-events: none;
+}
+.magic-card:hover::before { opacity: 1; }
+.magic-card > * { position: relative; z-index: 1; }
+
+/* 21st.dev / Magic UI: blur-fade entrance */
+.blur-fade { opacity: 0; filter: blur(8px); transform: translateY(10px); transition: opacity .55s cubic-bezier(.22,1,.36,1) var(--blur-delay), filter .55s cubic-bezier(.22,1,.36,1) var(--blur-delay), transform .55s cubic-bezier(.22,1,.36,1) var(--blur-delay); }
+.blur-fade.is-visible { opacity: 1; filter: blur(0); transform: translateY(0); }
+
+.task-card h3 {
+  color: var(--ink);
+  margin-bottom: var(--s-2);
+}
+
+.task-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1);
+  margin-bottom: var(--s-2);
+}
+
+.tag {
+  font-family: var(--font-mono);
+  font-size: var(--t-xs);
+  background: var(--sky-wash);
+  color: var(--sky-deep);
+  border: var(--line-sky);
+  border-radius: var(--r);
+  padding: 3px 10px;
+}
+
+.tag.sand {
+  background: var(--sand);
+  color: var(--graphite);
+  border: var(--line);
+}
+
+/* Сложность: полоса слева кодирует уровень плотностью голубого */
+.tag-diff {
+  background: var(--white);
+  color: var(--ink);
+  border: var(--line);
+  border-left-width: 3px;
+  padding-left: 8px;
+}
+
+.tag-diff-easy {
+  border-left-color: var(--level-easy);
+}
+
+.tag-diff-medium {
+  border-left-color: var(--level-medium);
+}
+
+.tag-diff-hard {
+  border-left-color: var(--level-hard);
+}
+
+.tag-diff-olympiad {
+  border-left-color: var(--level-olympiad);
+}
+
+.task-date {
+  font-family: var(--font-mono);
+  color: var(--graphite);
+  font-size: var(--t-xs);
+  margin-top: var(--s-2);
+  padding-top: var(--s-1);
+  border-top: var(--line);
+}
+
+.solution summary {
+  cursor: pointer;
+  color: var(--sky-deep);
+  font-size: var(--t-sm);
+  font-weight: 500;
+  padding: var(--s-1) 0;
+}
+
+.solution > div {
+  padding: var(--s-1) 0 0;
+}
+
+/* ==========================================================================
+   Формулы
+   ========================================================================== */
+
+.latex {
+  overflow-x: auto;
+}
+
+/* KaTeX по умолчанию 1.21em — строчная формула вылезает из ритма строки */
+.latex .katex {
+  font-size: 1.08em;
+}
+
+/* Выключная формула — отдельный блок с отбивкой, а не строка текста */
+.latex .katex-display {
+  margin: var(--s-2) 0;
+  padding: var(--s-2) 0 var(--s-2) var(--s-2);
+  border-left: 2px solid var(--sky);
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.video-wrap {
+  position: relative;
+  padding-top: 56.25%;
+  margin-top: var(--s-2);
+  border: var(--line);
+  border-radius: var(--r);
+  overflow: hidden;
+}
+
+.video-wrap iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+/* ==========================================================================
+   Таблицы
+   ========================================================================== */
+
+.table-wrap {
+  overflow-x: auto;
+  border: var(--line);
+  border-radius: var(--r);
+  background: linear-gradient(145deg, var(--white), #fbfcfb);
+  box-shadow: 0 14px 44px rgba(16,46,58,.055);
+}
+
+table.data {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--white);
+}
+
+table.data th,
+table.data td {
+  padding: 10px var(--s-2);
+  border-bottom: var(--line);
+  text-align: left;
+  font-size: var(--t-sm);
+}
+
+table.data th {
+  font-family: var(--font-mono);
+  font-size: var(--t-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--track-label);
+  color: var(--graphite);
+  background: var(--sand);
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+table.data tr:last-child td {
+  border-bottom: none;
+}
+
+table.data tbody tr:hover td {
+  background: rgba(231,243,247,.72);
+}
+
+/* ==========================================================================
+   Формы
+   ========================================================================== */
+
+.form-card {
+  max-width: 560px;
+  background: var(--white);
+  border: var(--line);
+  border-radius: 22px;
+  padding: clamp(24px, 5vw, 48px);
+  box-shadow: 0 18px 50px rgba(16,46,58,.07), inset 0 1px 0 rgba(255,255,255,.8);
+  margin: 0 auto;
+}
+
+.form-card.wide {
+  max-width: 860px;
+}
+
+.form-group {
+  margin-bottom: var(--s-2);
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-family: var(--font-mono);
+  font-size: var(--t-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--track-label);
+  color: var(--graphite);
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: var(--line);
+  border-radius: var(--r);
+  font-size: var(--t-sm);
+  font-family: var(--font-body);
+  color: var(--ink);
+  background-color: var(--white);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color .2s ease, transform .2s ease;
+}
+
+/* Место под свою стрелку: сокращённый padding выше задаёт все четыре стороны */
+.form-group select {
+  padding-right: 36px;
+}
+
+.form-group input:hover,
+.form-group select:hover,
+.form-group textarea:hover {
+  border-color: var(--sky);
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--sky-deep);
+  box-shadow: 0 0 0 4px rgba(118,184,212,.16), 0 8px 24px rgba(16,46,58,.06);
+  transform: translateY(-1px);
+}
+
+.form-group textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.form-actions {
+  display: flex;
+  gap: var(--s-1);
+  flex-wrap: wrap;
+  margin-top: var(--s-3);
+}
+
+/* ==========================================================================
+   Выпадающие списки
+
+   appearance: none снимает системный вид, дальше рисуем свою стрелку фоном.
+   Отступ справа под неё задан в .filters select и .form-group select: там
+   padding записан сокращённо, и отсюда его не перебить по специфичности.
+   Цвета в data-URI приходится писать числом - переменные внутри url() не живут.
+   ========================================================================== */
+
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  /* #6b7c8a - это --graphite */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5' fill='none' stroke='%236b7c8a' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right var(--s-2) center;
+  background-size: 12px 8px;
+  padding-right: 36px;
+}
+
+select:hover,
+select:focus {
+  /* #1d6a99 - это --sky-deep */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5' fill='none' stroke='%231d6a99' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+select:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+/* Раскрытый список рисует система. Здесь браузеры расходятся: Windows и Linux
+   эти цвета применяют, macOS оставляет свою отрисовку. */
+option {
+  color: var(--ink);
+  background-color: var(--white);
+}
+
+/* ==========================================================================
+   Обратная связь
+   ========================================================================== */
+
+.error {
+  color: var(--alarm);
+  font-size: var(--t-sm);
+}
+
+.alert {
+  padding: var(--s-2);
+  border-radius: var(--r);
+  border-left: 3px solid transparent;
+  margin-bottom: var(--s-2);
+  font-size: var(--t-sm);
+}
+
+.alert-ok {
+  background: var(--ok-wash);
+  border-left-color: var(--ok);
+  color: var(--ok);
+}
+
+.alert-err {
+  background: var(--alarm-wash);
+  border-left-color: var(--alarm);
+  color: var(--alarm);
+}
+
+.progress-bar {
+  background: var(--sand-line);
+  border-radius: var(--r);
+  height: 6px;
+  overflow: hidden;
+  min-width: 90px;
+}
+
+.progress-bar > div {
+  background: var(--sky-deep);
+  height: 100%;
+  transition: width 0.4s ease;
+}
+
+.status-PENDING {
+  color: var(--warn);
+}
+
+.status-PUBLISHED {
+  color: var(--ok);
+}
+
+.status-REJECTED {
+  color: var(--alarm);
+}
+
+/* ==========================================================================
+   Отзывы
+   ========================================================================== */
+
+.review-card {
+  background: var(--white);
+  border: var(--line);
+  border-left: 1px solid var(--sand-line);
+  border-radius: 18px;
+  padding: 28px;
+  margin-bottom: 0;
+  min-height: 180px;
+  box-shadow: 0 8px 30px rgba(16,46,58,.04);
+  transition: transform .25s cubic-bezier(.22,1,.36,1), border-color .25s ease, box-shadow .25s ease;
+}
+.review-card:hover { transform: translateY(-4px); border-color: rgba(17,93,120,.24); box-shadow: 0 18px 46px rgba(16,46,58,.08); }
+
+.contact-card p + p { margin-top: var(--s-2); }
+.contact-card a { font-weight: 600; text-decoration: none; }
+
+.review-card .stars {
+  color: var(--warn);
+  letter-spacing: 0.1em;
+}
+
+.review-card .author {
+  font-family: var(--font-mono);
+  color: var(--graphite);
+  font-size: var(--t-xs);
+  margin-top: var(--s-1);
+}
+
+/* ==========================================================================
+   Админка
+   ========================================================================== */
+
+.admin-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  margin-bottom: var(--s-4);
+  border-bottom: var(--line);
+}
+
+.admin-nav a {
+  padding: 10px var(--s-2);
+  text-decoration: none;
+  background: transparent;
+  color: var(--graphite);
+  font-size: var(--t-sm);
+  font-weight: 500;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  margin-bottom: 8px;
+  transition: background-color .2s ease, color .2s ease, border-color .2s ease;
+}
+
+.admin-nav a:hover {
+  color: var(--ink);
+}
+
+.admin-nav a.active {
+  color: var(--sky-deep);
+  border-color: rgba(17,93,120,.16);
+  background: var(--sky-wash);
+}
+
+.editor-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: var(--s-1);
+}
+
+.editor-toolbar button {
+  padding: 5px 10px;
+  border: var(--line);
+  background: var(--white);
+  color: var(--ink);
+  border-radius: var(--r);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: var(--t-xs);
+}
+
+.editor-toolbar button:hover {
+  background: var(--sky-wash);
+  border-color: var(--sky);
+  color: var(--sky-deep);
+}
+
+/* Идёт после :hover при равной специфичности - активный формат важнее наведения */
+.editor-toolbar button.is-active,
+.editor-toolbar button.is-active:hover {
+  background: var(--sky-deep);
+  border-color: var(--sky-deep);
+  color: var(--white);
+}
+
+.editor-area {
+  min-height: 240px;
+  max-height: 70vh;
+  overflow: auto;
+  resize: vertical;
+  border: var(--line);
+  border-radius: var(--r);
+  padding: var(--s-2);
+  background: var(--white);
+  outline: none;
+}
+
+.editor-area:focus {
+  border-color: var(--sky-deep);
+  box-shadow: 0 0 0 3px var(--sky-wash);
+}
+
+/* ==========================================================================
+   Содержимое из визуального редактора
+
+   Один набор правил на редактор и на публичную страницу: WYSIWYG обязан
+   показывать то же, что увидит посетитель.
+   ========================================================================== */
+
+.editor-area,
+.page-content {
+  /* Длинные адреса и слова без пробелов иначе распирают бокс по горизонтали */
+  overflow-wrap: anywhere;
+}
+
+.editor-area > * + *,
+.page-content > * + * {
+  margin-top: var(--s-2);
+}
+
+.editor-area h2,
+.page-content h2 {
+  font-size: var(--t-lg);
+}
+
+.editor-area h3,
+.page-content h3 {
+  font-size: var(--t-md);
+}
+
+/* Глобальный сброс обнуляет padding списков, и маркеры при list-style-position:
+   outside рисуются снаружи бокса. Отступ нужно вернуть явно. */
+.editor-area ul,
+.editor-area ol,
+.page-content ul,
+.page-content ol {
+  padding-left: 1.5em;
+}
+
+.editor-area li + li,
+.page-content li + li {
+  margin-top: 4px;
+}
+
+.editor-area img,
+.page-content img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Широкая таблица прокручивается внутри себя, а не растягивает страницу */
+.editor-area table,
+.page-content table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.editor-area pre,
+.page-content pre {
+  overflow-x: auto;
+  padding: var(--s-2);
+  background: var(--sand);
+  border-radius: var(--r);
+  font-family: var(--font-mono);
+  font-size: var(--t-sm);
+}
+
+.editor-area blockquote,
+.page-content blockquote {
+  padding-left: var(--s-2);
+  border-left: 3px solid var(--sky);
+  color: var(--graphite);
+}
+
+/* ==========================================================================
+   Подвал
+   ========================================================================== */
+
+.site-footer {
+  background: var(--ink);
+  border-top: var(--line);
+  margin-top: var(--s-8);
+  padding: var(--s-4) 0;
+  color: rgba(255,255,255,.7);
+  font-size: var(--t-sm);
+}
+
+.footer-grid { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 32px; align-items: center; }
+.footer-brand { display: flex; align-items: center; gap: 12px; color: var(--white); font: 700 .9rem var(--font-display); }
+.footer-brand .logo-mark { background: var(--sky); color: var(--ink); }
+.footer-meta { text-align: right; font-size: .72rem; }
+
+/* ==========================================================================
+   Утилиты
+   ========================================================================== */
+
+.muted {
+  color: var(--graphite);
+}
+
+.center {
+  text-align: center;
+}
+
+/* ==========================================================================
+   Адаптив: ТЗ требует корректной работы от 320px
+   ========================================================================== */
+
+@media (max-width: 860px) {
+  .nav { min-height: 68px; }
+  .nav .logo { margin-right: auto; }
+  .nav-toggle { display: grid; gap: 6px; width: 42px; height: 42px; place-content: center; border: 1px solid var(--sand-line); border-radius: 50%; background: var(--white); }
+  .nav-toggle span { width: 17px; height: 1px; background: var(--ink); }
+  .nav-menu { display: none; position: absolute; top: 68px; left: 0; right: 0; padding: 20px var(--gutter) 28px; background: #f7f8f5; border-bottom: 1px solid var(--sand-line); box-shadow: 0 20px 40px rgba(16,46,58,.08); }
+  .nav-menu.is-open { display: block; }
+  .nav-links, .nav-actions { align-items: stretch; flex-direction: column; }
+  .nav-links { gap: 0; }
+  .nav-links a { padding: 13px 0; border-bottom: 1px solid var(--sand-line); font-size: 1rem; }
+  .nav-actions { margin: 18px 0 0; gap: 8px; }
+  .nav-actions .btn { width: 100%; }
+  .hero-grid { grid-template-columns: 1fr; }
+  .orbit-visual { min-height: 380px; max-width: 520px; width: 100%; margin: -10px auto 0; }
+  .review-grid { grid-template-columns: 1fr 1fr; }
+  .grid-2 {
+    grid-template-columns: 1fr;
+    gap: var(--s-3);
+  }
+
+  section {
+    padding: var(--s-4) 0;
+  }
+
+  .hero { padding-top: var(--s-8); }
+
+  .hero h1 {
+    max-width: none;
+  }
+
+  .achievement {
+    flex-basis: 100%;
+    border-right: none;
+    border-bottom: var(--line);
+  }
+
+  .achievement:first-child {
+    padding-left: var(--s-3);
+  }
+
+  .achievement:last-child {
+    border-bottom: none;
+  }
+}
+
+@media (max-width: 560px) {
+  :root {
+    --gutter: var(--s-2);
+  }
+
+  .nav {
+    gap: var(--s-1) var(--s-2);
+  }
+
+  .filters {
+    flex-direction: column;
+  }
+
+  .filters select {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .form-card {
+    padding: var(--s-3);
+  }
+
+  .task-card {
+    padding: var(--s-2);
+  }
+
+  .achievement {
+    padding-left: var(--s-2);
+    padding-right: var(--s-2);
+  }
+
+  .achievement:first-child {
+    padding-left: var(--s-2);
+  }
+
+  /* Кнопки в узкой колонке тянутся на всю ширину, а не рвут строку */
+  .form-actions .btn,
+  .hero .btn {
+    flex: 1 1 auto;
+  }
+
+  .hero .btn + .btn {
+    margin-left: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .btn:active {
+    transform: none;
+  }
+
+  .blur-fade { opacity: 1; filter: none; transform: none; }
+}
+  .logo span:last-child { display: none; }
+  .hero .eyebrow span:last-child { display: none; }
+  .hero-grid { gap: 24px; }
+  .hero h1 { font-size: clamp(3rem, 16vw, 4.5rem); }
+  .hero-lead { font-size: 1rem; }
+  .orbit-visual { min-height: 300px; }
+  .orbit-layer { --orbit-mobile-scale: .68; transform-origin: center; }
+  .orbit-layer-outer { transform: translate(-50%, -50%) rotate(-28deg) scale(.68, .49); }
+  .orbit-layer-inner { transform: translate(-50%, -50%) rotate(38deg) scale(.68, .39); }
+  .orbit-core { width: 96px; height: 96px; font-size: 2.2rem; }
+  .proof-strip { grid-template-columns: 1fr; }
+  .proof-strip > div { padding: 16px 0; border-right: 0; border-bottom: 1px solid rgba(17,93,120,.16); }
+  .proof-strip > div:last-child { border-bottom: 0; }
+  .section-heading { grid-template-columns: 1fr; }
+  .review-grid { grid-template-columns: 1fr; }
+  .footer-grid { grid-template-columns: 1fr; }
+  .footer-meta { text-align: left; }

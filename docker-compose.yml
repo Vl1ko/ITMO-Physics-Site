@@ -1,0 +1,65 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: tutor-site-db
+    environment:
+      POSTGRES_DB: ${DB_NAME:-tutorsite}
+      POSTGRES_USER: ${DB_USER:-tutor}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-tutor}
+    ports:
+      # Только петлевой интерфейс: снаружи база доступна быть не должна,
+      # публикация нужна лишь локальной разработке и psql через ssh-туннель.
+      # Порт хоста меняется через DB_PORT_HOST - если 5432 уже занят своим постгресом.
+      - "127.0.0.1:${DB_PORT_HOST:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-tutor} -d ${DB_NAME:-tutorsite}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  backend:
+    build: ./backend
+    container_name: tutor-site-backend
+    profiles: ["full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-tutorsite}
+      DB_USER: ${DB_USER:-tutor}
+      DB_PASSWORD: ${DB_PASSWORD:-tutor}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-ney4s@tutorsite.local}
+      # Без пароля админ создастся, но войти под ним будет нельзя, а починить
+      # это можно только пересозданием базы. Поэтому падаем сразу и громко.
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?задайте ADMIN_PASSWORD в .env, иначе вход в админку невозможен}
+      JWT_SECRET: ${JWT_SECRET:?задайте JWT_SECRET в .env, минимум 32 символа - openssl rand -base64 48}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+    ports:
+      - "127.0.0.1:8080:8080"
+    healthcheck:
+      # /api/reviews открыт без авторизации и отвечает 200 даже на пустой базе
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/api/reviews || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    container_name: tutor-site-frontend
+    profiles: ["full"]
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${WEB_PORT:-3000}:80"
+    restart: unless-stopped
+
+volumes:
+  pgdata:

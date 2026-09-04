@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.tutorsite</groupId>
+    <artifactId>tutor-site</artifactId>
+    <version>1.0.0</version>
+    <packaging>pom</packaging>
+
+    <name>tutor-site</name>
+    <description>
+        Сайт преподавателя физики и математики
+        Агрегатор: backend - REST API на Spring Boot, frontend - SPA на React, собирается через npm
+    </description>
+
+    <modules>
+        <module>backend</module>
+    </modules>
+</project>
